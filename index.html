@@ -29,8 +29,8 @@
     </script>
     <style>
         body { font-family: Arial, Helvetica, sans-serif; background-color: #f8f9fa; color: #343a40; padding-bottom: 50px; }
-        .sidebar-item:hover, .sidebar-item.active { background-color: rgba(255, 255, 255, 0.1); border-left: 4px solid #fff; }
         .sidebar-item { border-left: 4px solid transparent; transition: all 0.3s; }
+        .sidebar-item:hover, .sidebar-item.active { background-color: #334155; border-left: 4px solid #3b82f6; color: #ffffff; }
         /* Tùy chỉnh thanh cuộn */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -43,31 +43,47 @@
 <body class="flex h-screen overflow-hidden">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-primary text-white flex flex-col hidden md:flex z-20 transition-all duration-300" id="sidebar">
-        <div class="p-5 font-bold text-2xl border-b border-blue-500 flex items-center justify-between">
-            <span><i class="fas fa-graduation-cap mr-2"></i> eSchool</span>
-            <button class="md:hidden text-white" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+    <aside class="w-64 bg-[#1e293b] text-gray-300 flex flex-col hidden md:flex z-20 transition-all duration-300 shadow-xl" id="sidebar">
+        <!-- Logo -->
+        <div class="p-5 font-bold text-2xl flex items-center text-blue-500">
+            <i class="fas fa-graduation-cap mr-3"></i> <span class="text-white">VNClass</span>
+            <button class="md:hidden text-white ml-auto" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
         </div>
-        <nav class="flex-1 py-4 overflow-y-auto">
+
+        <!-- User Info -->
+        <div class="px-5 pb-5 mb-2 border-b border-slate-700 flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-lg">
+                T
+            </div>
+            <div class="flex flex-col">
+                <span class="font-bold text-base text-gray-100 leading-tight">Tống Phước Khải</span>
+                <span class="text-sm text-slate-400 mt-1">Giáo viên</span>
+            </div>
+        </div>
+
+        <nav class="flex-1 py-2 overflow-y-auto space-y-1">
             <a href="#" onclick="switchView('dashboard')" class="sidebar-item active block py-3 px-5 text-sm" id="nav-dashboard">
-                <i class="fas fa-tachometer-alt w-6"></i> Tổng Quan
-            </a>
-            <a href="#" onclick="switchView('hocsinh')" class="sidebar-item block py-3 px-5 text-sm" id="nav-hocsinh">
-                <i class="fas fa-user-graduate w-6"></i> Quản Lý Học Sinh
-            </a>
-            <a href="#" onclick="switchView('giaovien')" class="sidebar-item block py-3 px-5 text-sm" id="nav-giaovien">
-                <i class="fas fa-chalkboard-teacher w-6"></i> Quản Lý Giáo Viên
+                <i class="fas fa-chart-pie w-6 text-center mr-2 text-lg"></i> Tổng quan
             </a>
             <a href="#" onclick="switchView('lophoc')" class="sidebar-item block py-3 px-5 text-sm" id="nav-lophoc">
-                <i class="fas fa-users w-6"></i> Quản Lý Lớp Học
+                <i class="fas fa-laptop w-6 text-center mr-2 text-lg"></i> Quản lý Lớp học
+            </a>
+            <a href="#" onclick="switchView('hocsinh')" class="sidebar-item block py-3 px-5 text-sm" id="nav-hocsinh">
+                <i class="fas fa-user-friends w-6 text-center mr-2 text-lg"></i> Danh sách Học sinh
+            </a>
+            <a href="#" onclick="switchView('baihoc')" class="sidebar-item block py-3 px-5 text-sm" id="nav-baihoc">
+                <i class="fas fa-book w-6 text-center mr-2 text-lg"></i> Quản lý Bài học
             </a>
             <a href="#" onclick="switchView('baitap')" class="sidebar-item block py-3 px-5 text-sm" id="nav-baitap">
-                <i class="fas fa-book-open w-6"></i> Giao Bài Tập
-            </a>
-            <a href="#" onclick="switchView('thongke')" class="sidebar-item block py-3 px-5 text-sm" id="nav-thongke">
-                <i class="fas fa-chart-pie w-6"></i> Báo Cáo - Thống Kê
+                <i class="fas fa-list-ul w-6 text-center mr-2 text-lg"></i> Quản lý Bài tập
             </a>
         </nav>
+
+        <div class="p-4 border-t border-slate-700">
+            <a href="#" onclick="alert('Tính năng Đăng xuất')" class="sidebar-item block py-3 px-5 text-sm rounded">
+                <i class="fas fa-sign-out-alt w-6 text-center mr-2 text-lg"></i> Đăng xuất
+            </a>
+        </div>
     </aside>
 
     <!-- Main Content -->
@@ -79,13 +95,7 @@
             </button>
             <h2 class="text-xl font-semibold text-textColor hidden md:block" id="header-title">Tổng Quan</h2>
             <div class="flex items-center">
-                <div class="text-sm text-right mr-3 hidden sm:block">
-                    <p class="font-semibold">Quản Trị Viên</p>
-                    <p class="text-xs text-secondary">Admin</p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
-                    AD
-                </div>
+                <!-- Profile đã được chuyển sang sidebar -->
             </div>
         </header>
 
@@ -280,12 +290,16 @@
           "baitap": [
             { "maBT": "BT0001", "tieuDe": "Giải bài tập Toán chương 1", "moTa": "Làm bài 1, 2, 3 trang 15 SGK", "maLop": "6A1", "maGV": "GV001", "ngayGiao": "2023-10-01", "hanNop": "2023-10-05" },
             { "maBT": "BT0002", "tieuDe": "Viết bài văn miêu tả", "moTa": "Tả quang cảnh trường em vào buổi sáng", "maLop": "7A2", "maGV": "GV002", "ngayGiao": "2023-10-02", "hanNop": "2023-10-07" }
+          ],
+          "baihoc": [
+            { "maBH": "BH0001", "tieuDe": "Bài 1: Tập hợp các số tự nhiên", "mon": "Toán", "maLop": "6A1" },
+            { "maBH": "BH0002", "tieuDe": "Bài 2: Tính chất cơ bản của phân số", "mon": "Toán", "maLop": "6A1" }
           ]
         };
 
         // --- 2. QUẢN LÝ STATE ---
         let appData = JSON.parse(localStorage.getItem('eSchoolData')) || seedData;
-        let currentEntity = ''; // 'hocsinh', 'giaovien', 'lophoc'
+        let currentEntity = ''; // 'hocsinh', 'giaovien', 'lophoc', 'baitap', 'baihoc'
         let currentItemEditId = null; // ID của item đang sửa
         
         // Phân trang & Tìm kiếm
@@ -304,6 +318,7 @@
             
             // Cập nhật dữ liệu bài tập cho các máy đã lưu bản cũ trước đó
             if(!appData.baitap) { appData.baitap = seedData.baitap; saveData(); }
+            if(!appData.baihoc) { appData.baihoc = seedData.baihoc; saveData(); }
             
             switchView('dashboard');
         };
@@ -343,7 +358,7 @@
                 currentEntity = viewName;
                 document.getElementById('view-datalist').classList.remove('hidden');
                 
-                const titles = { 'hocsinh': 'Quản Lý Học Sinh', 'giaovien': 'Quản Lý Giáo Viên', 'lophoc': 'Quản Lý Lớp Học', 'baitap': 'Quản Lý Bài Tập' };
+                const titles = { 'hocsinh': 'Danh sách Học sinh', 'giaovien': 'Quản Lý Giáo Viên', 'lophoc': 'Quản lý Lớp học', 'baitap': 'Quản lý Bài tập', 'baihoc': 'Quản lý Bài học' };
                 document.getElementById('header-title').innerText = titles[viewName];
                 
                 // Hiện/ẩn tùy chọn sắp xếp điểm
@@ -433,6 +448,8 @@
                 tr = `<tr><th class="p-3 w-20">Mã GV</th><th class="p-3">Họ Tên</th><th class="p-3">SĐT</th><th class="p-3">Môn Dạy</th><th class="p-3 text-center w-32">Thao Tác</th></tr>`;
             } else if (currentEntity === 'lophoc') {
                 tr = `<tr><th class="p-3 w-20">Mã Lớp</th><th class="p-3">Tên Lớp</th><th class="p-3">Sĩ Số</th><th class="p-3">GV Chủ Nhiệm</th><th class="p-3 text-center w-32">Thao Tác</th></tr>`;
+            } else if (currentEntity === 'baihoc') {
+                tr = `<tr><th class="p-3 w-20">Mã BH</th><th class="p-3">Tiêu Đề</th><th class="p-3">Môn Học</th><th class="p-3">Lớp Áp Dụng</th><th class="p-3 text-center w-32">Thao Tác</th></tr>`;
             } else {
                 tr = `<tr><th class="p-3 w-20">Mã BT</th><th class="p-3">Tiêu Đề</th><th class="p-3">Lớp Áp Dụng</th><th class="p-3">Hạn Nộp</th><th class="p-3 text-center w-32">Thao Tác</th></tr>`;
             }
@@ -446,7 +463,7 @@
                 return;
             }
 
-            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : 'maBT'));
+            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : (currentEntity === 'baihoc' ? 'maBH' : 'maBT')));
 
             let html = '';
             data.forEach(item => {
@@ -479,6 +496,15 @@
                         <td class="p-3 font-medium">${item.tenLop}</td>
                         <td class="p-3">${item.siSo}</td>
                         <td class="p-3">${tenGV}</td>
+                    `;
+                } else if (currentEntity === 'baihoc') {
+                    const lop = appData.lophoc.find(l => l.maLop === item.maLop);
+                    const tenLop = lop ? lop.tenLop : '<span class="text-red-400">Trống</span>';
+                    html += `
+                        <td class="p-3 font-semibold text-teal-600">${item.maBH}</td>
+                        <td class="p-3 font-medium">${item.tieuDe}</td>
+                        <td class="p-3">${item.mon}</td>
+                        <td class="p-3">${tenLop}</td>
                     `;
                 } else {
                     // Bài tập
@@ -564,12 +590,12 @@
             const fieldsContainer = document.getElementById('form-fields');
             let item = {};
             if (id) {
-                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : 'maBT'));
+                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : (currentEntity === 'baihoc' ? 'maBH' : 'maBT')));
                 item = appData[currentEntity].find(x => x[idField] === id);
             } else {
                 // Auto generate ID for new item
-                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : 'maBT'));
-                const prefix = currentEntity === 'hocsinh' ? 'HS' : (currentEntity === 'giaovien' ? 'GV' : (currentEntity === 'lophoc' ? 'L' : 'BT'));
+                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : (currentEntity === 'baihoc' ? 'maBH' : 'maBT')));
+                const prefix = currentEntity === 'hocsinh' ? 'HS' : (currentEntity === 'giaovien' ? 'GV' : (currentEntity === 'lophoc' ? 'L' : (currentEntity === 'baihoc' ? 'BH' : 'BT')));
                 item[idField] = prefix + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
             }
 
@@ -609,7 +635,7 @@
                     <div class="col-span-1"><label class="block text-sm font-medium mb-1">Số Điện Thoại</label><input type="tel" name="sdt" value="${item.sdt || ''}" pattern="[0-9]{10}" class="w-full border rounded px-3 py-2"></div>
                     <div class="col-span-1 md:col-span-2"><label class="block text-sm font-medium mb-1">Email</label><input type="email" name="email" value="${item.email || ''}" class="w-full border rounded px-3 py-2"></div>
                 `;
-            } else {
+            } else if (currentEntity === 'lophoc') {
                 // Lớp học
                 let optionsGV = appData.giaovien.map(gv => `<option value="${gv.maGV}" ${item.GVCN === gv.maGV ? 'selected' : ''}>${gv.hoTen} (${gv.monDay})</option>`).join('');
                 formHTML = `
@@ -621,6 +647,16 @@
                             <option value="">-- Chọn GVCN --</option>
                             ${optionsGV}
                         </select>
+                    </div>
+                `;
+            } else if (currentEntity === 'baihoc') {
+                let optionsLop = appData.lophoc.map(l => `<option value="${l.maLop}" ${item.maLop === l.maLop ? 'selected' : ''}>${l.tenLop}</option>`).join('');
+                formHTML = `
+                    <div class="col-span-1 md:col-span-2"><label class="block text-sm font-medium mb-1">Mã Bài Học *</label><input type="text" name="maBH" value="${item.maBH || ''}" required readonly class="w-full border rounded px-3 py-2 bg-gray-100"></div>
+                    <div class="col-span-1 md:col-span-2"><label class="block text-sm font-medium mb-1">Tiêu Đề *</label><input type="text" name="tieuDe" value="${item.tieuDe || ''}" required class="w-full border rounded px-3 py-2 focus:border-primary focus:outline-none"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Môn Học *</label><input type="text" name="mon" value="${item.mon || ''}" required class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Áp Dụng Cho Lớp *</label>
+                        <select name="maLop" required class="w-full border rounded px-3 py-2"><option value="">-- Chọn Lớp --</option>${optionsLop}</select>
                     </div>
                 `;
             } else {
@@ -656,7 +692,7 @@
             if(dataObj.diemVan) dataObj.diemVan = parseFloat(dataObj.diemVan);
             if(dataObj.diemAnh) dataObj.diemAnh = parseFloat(dataObj.diemAnh);
 
-            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : 'maBT'));
+            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : (currentEntity === 'baihoc' ? 'maBH' : 'maBT')));
             
             if (currentItemEditId) {
                 // Update
@@ -683,7 +719,7 @@
         // --- 8. XÓA VÀ XEM CHI TIẾT ---
         function deleteItem(id) {
             if(confirm('Bạn có chắc chắn muốn xóa dữ liệu này? Hành động này không thể hoàn tác.')) {
-                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : 'maBT'));
+                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : (currentEntity === 'baihoc' ? 'maBH' : 'maBT')));
                 appData[currentEntity] = appData[currentEntity].filter(x => x[idField] !== id);
                 saveData();
                 
@@ -694,7 +730,7 @@
         }
 
         function viewDetail(id) {
-            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : 'maBT'));
+            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : (currentEntity === 'lophoc' ? 'maLop' : (currentEntity === 'baihoc' ? 'maBH' : 'maBT')));
             const item = appData[currentEntity].find(x => x[idField] === id);
             const content = document.getElementById('detail-content');
             let html = '';
@@ -751,6 +787,19 @@
                         <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Giáo viên chủ nhiệm</span><span class="font-bold">${tenGV}</span></div>
                     </div>
                 `;
+            } else if (currentEntity === 'baihoc') {
+                const lop = appData.lophoc.find(l => l.maLop === item.maLop);
+                const tenLop = lop ? lop.tenLop : 'Chưa rõ';
+                html = `
+                    <div class="flex items-center gap-4 mb-6 border-b pb-4">
+                        <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 text-3xl"><i class="fas fa-book"></i></div>
+                        <div><h2 class="text-xl font-bold">${item.tieuDe}</h2><p class="text-gray-500">Mã BH: ${item.maBH}</p></div>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Môn học</span><span class="font-bold">${item.mon}</span></div>
+                        <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Áp dụng cho lớp</span><span class="font-bold text-primary">${tenLop}</span></div>
+                    </div>
+                `;
             } else {
                 const lop = appData.lophoc.find(l => l.maLop === item.maLop);
                 const tenLop = lop ? lop.tenLop : 'Chưa rõ';
@@ -799,6 +848,13 @@
                 csvContent += headers.join(',') + '\r\n';
                 filteredData.forEach(item => {
                     const row = [item.maLop, `"${item.tenLop}"`, item.siSo, item.GVCN];
+                    csvContent += row.join(',') + '\r\n';
+                });
+            } else if (currentEntity === 'baihoc') {
+                headers = ['Mã BH', 'Tiêu Đề', 'Môn Học', 'Mã Lớp'];
+                csvContent += headers.join(',') + '\r\n';
+                filteredData.forEach(item => {
+                    const row = [item.maBH, `"${item.tieuDe}"`, `"${item.mon}"`, item.maLop];
                     csvContent += row.join(',') + '\r\n';
                 });
             } else {
