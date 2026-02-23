@@ -255,6 +255,9 @@
                         <select id="filter-student-class" onchange="renderStudents()" class="border border-gray-300 rounded px-3 py-2 w-full md:w-48 bg-white focus:outline-primary">
                             <!-- Render JS -->
                         </select>
+                        <button id="btn-add-student" onclick="openStudentModal()" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition hidden">
+                            <i class="fas fa-plus mr-2"></i>Thêm học sinh
+                        </button>
                         <button onclick="window.print()" class="bg-secondary hover:bg-gray-600 text-white px-4 py-2 rounded shadow transition">
                             <i class="fas fa-print mr-2"></i>In danh sách
                         </button>
@@ -269,6 +272,7 @@
                                     <th class="p-4 font-semibold text-gray-600">Tài khoản</th>
                                     <th class="p-4 font-semibold text-gray-600">Email</th>
                                     <th class="p-4 font-semibold text-gray-600 text-center">Lớp</th>
+                                    <th id="th-student-action" class="p-4 font-semibold text-gray-600 text-center no-print hidden">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="table-students" class="divide-y divide-gray-200">
@@ -384,6 +388,44 @@
             </div>
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="closeModal('modal-class')" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">Hủy</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white rounded hover:bg-blue-600">Lưu thông tin</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal Học sinh -->
+    <div id="modal-student" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-full max-w-md z-50 hidden fade-in">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-lg font-bold" id="modal-student-title">Thêm Học Sinh</h3>
+            <button onclick="closeModal('modal-student')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+        </div>
+        <form onsubmit="saveStudent(event)" class="p-4">
+            <input type="hidden" id="student-id">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Họ và Tên</label>
+                <input type="text" id="student-name" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Email</label>
+                <input type="email" id="student-email" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Lớp học</label>
+                <select id="student-classId" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" required></select>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Tên đăng nhập</label>
+                    <input type="text" id="student-username" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Mật khẩu</label>
+                    <input type="text" id="student-password" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" placeholder="Nhập MK..." required>
+                    <p id="student-password-hint" class="text-[10px] text-gray-500 mt-1 hidden">Bỏ trống nếu không muốn đổi MK</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeModal('modal-student')" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">Hủy</button>
                 <button type="submit" class="px-4 py-2 bg-primary text-white rounded hover:bg-blue-600">Lưu thông tin</button>
             </div>
         </form>
@@ -734,6 +776,12 @@
             document.getElementById('btn-add-class').classList.toggle('hidden', currentUser.role !== 'teacher');
             document.getElementById('btn-add-lesson').classList.toggle('hidden', currentUser.role !== 'teacher');
             document.getElementById('btn-add-assignment').classList.toggle('hidden', currentUser.role !== 'teacher');
+            
+            // Xử lý nút Thêm Học sinh và cột Thao tác
+            const btnAddStudent = document.getElementById('btn-add-student');
+            if(btnAddStudent) btnAddStudent.classList.toggle('hidden', currentUser.role !== 'teacher');
+            const thStudentAction = document.getElementById('th-student-action');
+            if(thStudentAction) thStudentAction.classList.toggle('hidden', currentUser.role !== 'teacher');
 
             // Điều hướng mặc định
             navigate('dashboard');
@@ -1087,12 +1135,23 @@
             }
 
             if(students.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Không tìm thấy học sinh nào.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${currentUser.role === 'teacher' ? '5' : '4'}" class="p-4 text-center text-gray-500">Không tìm thấy học sinh nào.</td></tr>`;
                 return;
             }
 
             students.forEach(s => {
                 const className = db.classes.find(c => c.id === s.classId)?.name || 'Chưa xếp lớp';
+                
+                let actionHTML = '';
+                if (currentUser.role === 'teacher') {
+                    actionHTML = `
+                        <td class="p-4 text-center no-print">
+                            <button onclick="editStudent('${s.id}')" class="text-blue-500 hover:text-blue-700 mr-3" title="Sửa"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteStudent('${s.id}')" class="text-red-500 hover:text-red-700" title="Xóa"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                }
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
                         <td class="p-4 font-medium flex items-center gap-2">
@@ -1102,11 +1161,96 @@
                         <td class="p-4 text-sm">${s.username}</td>
                         <td class="p-4 text-sm">${s.email}</td>
                         <td class="p-4 text-center"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${className}</span></td>
+                        ${actionHTML}
                     </tr>
                 `;
             });
         }
 
+        function openStudentModal() {
+            document.getElementById('modal-student-title').textContent = 'Thêm Học Sinh Mới';
+            document.getElementById('student-id').value = '';
+            document.getElementById('student-password').required = true;
+            document.getElementById('student-password-hint').classList.add('hidden');
+            populateClassDropdown('student-classId', false); 
+            openModal('modal-student');
+        }
+
+        function saveStudent(e) {
+            e.preventDefault();
+            const id = document.getElementById('student-id').value;
+            const name = document.getElementById('student-name').value;
+            const email = document.getElementById('student-email').value;
+            const classId = document.getElementById('student-classId').value;
+            const username = document.getElementById('student-username').value;
+            const password = document.getElementById('student-password').value;
+
+            const db = getDB();
+
+            // Kiểm tra username trùng lặp
+            if(db.users.some(u => u.username === username && u.id !== id)) {
+                showToast('Tên đăng nhập đã tồn tại!', 'error');
+                return;
+            }
+
+            if (id) {
+                const idx = db.users.findIndex(u => u.id === id);
+                if (idx > -1) {
+                    db.users[idx].name = name;
+                    db.users[idx].email = email;
+                    db.users[idx].classId = classId;
+                    db.users[idx].username = username;
+                    if(password) db.users[idx].password = password; // Chỉ đổi nếu có nhập
+                    showToast('Đã cập nhật thông tin học sinh');
+                }
+            } else {
+                db.users.push({
+                    id: generateId('user'),
+                    username,
+                    password,
+                    role: 'student',
+                    name,
+                    email,
+                    classId
+                });
+                showToast('Đã thêm học sinh mới');
+            }
+            saveDB(db);
+            closeModal('modal-student');
+            renderStudents();
+        }
+
+        function editStudent(id) {
+            const db = getDB();
+            const s = db.users.find(u => u.id === id);
+            if(s) {
+                document.getElementById('modal-student-title').textContent = 'Sửa Thông Tin Học Sinh';
+                document.getElementById('student-id').value = s.id;
+                document.getElementById('student-name').value = s.name;
+                document.getElementById('student-email').value = s.email;
+                document.getElementById('student-username').value = s.username;
+                
+                // Cấu hình không bắt buộc nhập lại mật khẩu khi sửa
+                document.getElementById('student-password').value = '';
+                document.getElementById('student-password').required = false; 
+                document.getElementById('student-password-hint').classList.remove('hidden');
+                
+                populateClassDropdown('student-classId', false);
+                document.getElementById('student-classId').value = s.classId;
+                
+                openModal('modal-student');
+            }
+        }
+
+        function deleteStudent(id) {
+            if(confirm('Bạn có chắc chắn muốn xóa học sinh này? Mọi dữ liệu nộp bài của học sinh này sẽ bị ảnh hưởng.')) {
+                const db = getDB();
+                db.users = db.users.filter(u => u.id !== id);
+                saveDB(db);
+                showToast('Đã xóa học sinh', 'success');
+                renderStudents();
+            }
+        }
 
         // --- LESSONS ---
         function renderLessons() {
