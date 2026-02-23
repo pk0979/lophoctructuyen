@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eSchool - Quản Lý Giáo Dục Toàn Diện</title>
+    <!-- Tailwind CSS cho Giao diện -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome cho Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js cho Biểu đồ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Cấu hình màu sắc theo yêu cầu
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#007bff',
+                        secondary: '#6c757d',
+                        background: '#f8f9fa',
+                        textColor: '#343a40',
+                        footerBg: '#343a40'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; background-color: #f8f9fa; color: #343a40; padding-bottom: 50px; }
+        .sidebar-item:hover, .sidebar-item.active { background-color: rgba(255, 255, 255, 0.1); border-left: 4px solid #fff; }
+        .sidebar-item { border-left: 4px solid transparent; transition: all 0.3s; }
+        /* Tùy chỉnh thanh cuộn */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        /* Modal transition */
+        .modal-bg { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-primary text-white flex flex-col hidden md:flex z-20 transition-all duration-300" id="sidebar">
+        <div class="p-5 font-bold text-2xl border-b border-blue-500 flex items-center justify-between">
+            <span><i class="fas fa-graduation-cap mr-2"></i> eSchool</span>
+            <button class="md:hidden text-white" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <a href="#" onclick="switchView('dashboard')" class="sidebar-item active block py-3 px-5 text-sm" id="nav-dashboard">
+                <i class="fas fa-tachometer-alt w-6"></i> Tổng Quan
+            </a>
+            <a href="#" onclick="switchView('hocsinh')" class="sidebar-item block py-3 px-5 text-sm" id="nav-hocsinh">
+                <i class="fas fa-user-graduate w-6"></i> Quản Lý Học Sinh
+            </a>
+            <a href="#" onclick="switchView('giaovien')" class="sidebar-item block py-3 px-5 text-sm" id="nav-giaovien">
+                <i class="fas fa-chalkboard-teacher w-6"></i> Quản Lý Giáo Viên
+            </a>
+            <a href="#" onclick="switchView('lophoc')" class="sidebar-item block py-3 px-5 text-sm" id="nav-lophoc">
+                <i class="fas fa-users w-6"></i> Quản Lý Lớp Học
+            </a>
+            <a href="#" onclick="switchView('thongke')" class="sidebar-item block py-3 px-5 text-sm" id="nav-thongke">
+                <i class="fas fa-chart-pie w-6"></i> Báo Cáo - Thống Kê
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden relative">
+        <!-- Header -->
+        <header class="bg-white shadow-sm p-4 flex justify-between items-center z-10">
+            <button class="text-gray-500 hover:text-primary md:hidden" onclick="toggleSidebar()">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h2 class="text-xl font-semibold text-textColor hidden md:block" id="header-title">Tổng Quan</h2>
+            <div class="flex items-center">
+                <div class="text-sm text-right mr-3 hidden sm:block">
+                    <p class="font-semibold">Quản Trị Viên</p>
+                    <p class="text-xs text-secondary">Admin</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                    AD
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Views Area -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-background" id="main-content">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="view-section">
+                <!-- Thống kê Card -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-blue-500 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-secondary uppercase font-bold">Tổng Học Sinh</p>
+                            <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-hs">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-secondary uppercase font-bold">Tổng Giáo Viên</p>
+                            <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-gv">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-purple-500 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-secondary uppercase font-bold">Tổng Lớp Học</p>
+                            <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-lop">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Học sinh mới -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-4 border-b border-gray-200">
+                            <h4 class="font-bold text-textColor"><i class="fas fa-star text-yellow-500 mr-2"></i> Học sinh mới nhập học</h4>
+                        </div>
+                        <div class="p-0">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 text-secondary">
+                                    <tr><th class="p-3">Mã HS</th><th class="p-3">Họ Tên</th><th class="p-3">Lớp</th></tr>
+                                </thead>
+                                <tbody id="recent-hs-body" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Giáo viên mới -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-4 border-b border-gray-200">
+                            <h4 class="font-bold text-textColor"><i class="fas fa-award text-blue-500 mr-2"></i> Giáo viên mới tuyển dụng</h4>
+                        </div>
+                        <div class="p-0">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 text-secondary">
+                                    <tr><th class="p-3">Mã GV</th><th class="p-3">Họ Tên</th><th class="p-3">Môn Dạy</th></tr>
+                                </thead>
+                                <tbody id="recent-gv-body" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: DATA LISTS (Dùng chung cho Học Sinh, Giáo Viên, Lớp) -->
+            <div id="view-datalist" class="view-section hidden">
+                <div class="bg-white rounded-lg shadow p-4 mb-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                        <input type="text" id="search-input" placeholder="Tìm kiếm..." class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary w-full md:w-64" oninput="handleSearch()">
+                        <select id="sort-select" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" onchange="handleSort()">
+                            <option value="">Sắp xếp mặc định</option>
+                            <option value="name_asc">Tên (A-Z)</option>
+                            <option value="name_desc">Tên (Z-A)</option>
+                            <option value="score_desc" class="sort-score hidden">Điểm (Cao - Thấp)</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="exportExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors"><i class="fas fa-file-excel mr-1"></i> Xuất Excel</button>
+                        <button onclick="openFormModal()" class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors"><i class="fas fa-plus mr-1"></i> Thêm Mới</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-x-auto">
+                    <table class="w-full text-sm text-left whitespace-nowrap">
+                        <thead class="bg-gray-100 text-secondary font-semibold" id="table-head">
+                            <!-- Gen qua JS -->
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-gray-200">
+                            <!-- Gen qua JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Phân trang -->
+                <div class="flex justify-between items-center mt-4">
+                    <div class="text-sm text-secondary" id="pagination-info">Hiển thị 1 - 10 của 100</div>
+                    <div class="flex gap-1" id="pagination-controls">
+                        <!-- Gen qua JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: THỐNG KÊ -->
+            <div id="view-thongke" class="view-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <h4 class="font-bold text-textColor text-center mb-4">Điểm Trung Bình Theo Lớp</h4>
+                        <canvas id="barChart" height="250"></canvas>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <h4 class="font-bold text-textColor text-center mb-4">Tỷ Lệ Học Lực Học Sinh</h4>
+                        <div class="w-2/3 mx-auto">
+                            <canvas id="pieChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- FOOTER BẢN QUYỀN (Fixed Bottom) -->
+    <footer class="fixed bottom-0 w-full bg-footerBg text-white py-3 px-4 text-center text-sm z-30 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+        Phát triển bởi <span class="font-bold text-blue-300">Thầy Tống Phước Khải</span> - Trường THCS Đa Phước <i class="fas fa-heart text-red-500 animate-pulse ml-1"></i>
+    </footer>
+
+    <!-- MODAL: FORM (Thêm/Sửa) -->
+    <div id="form-modal" class="fixed inset-0 modal-bg z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300" id="form-modal-content">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-lg font-bold text-textColor" id="modal-title">Thêm Mới</h3>
+                <button onclick="closeModal('form-modal')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="dynamic-form" onsubmit="handleFormSubmit(event)">
+                    <div id="form-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Gen fields qua JS -->
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3 border-t pt-4">
+                        <button type="button" onclick="closeModal('form-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">Hủy</button>
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700 transition-colors"><i class="fas fa-save mr-1"></i> Lưu Dữ Liệu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHI TIẾT -->
+    <div id="detail-modal" class="fixed inset-0 modal-bg z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg">
+                <h3 class="text-lg font-bold text-textColor"><i class="fas fa-info-circle text-primary mr-2"></i> Thông Tin Chi Tiết</h3>
+                <button onclick="closeModal('detail-modal')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6" id="detail-content">
+                <!-- Nội dung chi tiết -->
+            </div>
+            <div class="p-4 border-t flex justify-end bg-gray-50 rounded-b-lg">
+                <button onclick="closeModal('detail-modal')" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÃ JAVASCRIPT XỬ LÝ -->
+    <script>
+        // --- 1. DỮ LIỆU KHỞI TẠO (JSON) ---
+        const seedData = {
+          "hocsinh": [
+            { "maHS": "HS001", "hoTen": "Nguyễn Văn An", "ngaySinh": "2008-05-20", "gioiTinh": "Nam", "lop": "6A1", "diaChi": "123 Đường ABC, TP.HCM", "email": "an.nguyen@example.com", "sdt": "0901234567", "diemToan": 8.5, "diemVan": 7.0, "diemAnh": 9.0 },
+            { "maHS": "HS002", "hoTen": "Trần Thị Bình", "ngaySinh": "2007-08-15", "gioiTinh": "Nữ", "lop": "7A2", "diaChi": "456 Đường DEF, TP.HCM", "email": "binh.tran@example.com", "sdt": "0912345678", "diemToan": 9.0, "diemVan": 8.0, "diemAnh": 8.5 },
+            { "maHS": "HS003", "hoTen": "Lê Hoàng Phúc", "ngaySinh": "2008-11-02", "gioiTinh": "Nam", "lop": "6A1", "diaChi": "Quận 1, TP.HCM", "email": "phuc@example.com", "sdt": "0987654321", "diemToan": 4.5, "diemVan": 5.0, "diemAnh": 5.5 },
+            { "maHS": "HS004", "hoTen": "Phạm Mai Phương", "ngaySinh": "2007-02-14", "gioiTinh": "Nữ", "lop": "7A2", "diaChi": "Quận 3, TP.HCM", "email": "phuong@example.com", "sdt": "0911223344", "diemToan": 7.0, "diemVan": 6.5, "diemAnh": 6.0 },
+            { "maHS": "HS005", "hoTen": "Vũ Đình Trường", "ngaySinh": "2006-09-09", "gioiTinh": "Nam", "lop": "8A1", "diaChi": "Quận 5, TP.HCM", "email": "truong@example.com", "sdt": "0933445566", "diemToan": 9.5, "diemVan": 9.0, "diemAnh": 10.0 }
+          ],
+          "giaovien": [
+            { "maGV": "GV001", "hoTen": "Lê Thị Cẩm", "ngaySinh": "1980-02-10", "gioiTinh": "Nữ", "monDay": "Toán", "email": "cam.le@example.com", "sdt": "0909876543" },
+            { "maGV": "GV002", "hoTen": "Phạm Văn Dũng", "ngaySinh": "1975-07-25", "gioiTinh": "Nam", "monDay": "Ngữ Văn", "email": "dung.pham@example.com", "sdt": "0918765432" },
+            { "maGV": "GV003", "hoTen": "Trần Ngọc Ánh", "ngaySinh": "1985-12-05", "gioiTinh": "Nữ", "monDay": "Tiếng Anh", "email": "anh.tran@example.com", "sdt": "0908112233" }
+          ],
+          "lophoc": [
+            { "maLop": "6A1", "tenLop": "Lớp 6A1", "siSo": 35, "GVCN": "GV001" },
+            { "maLop": "7A2", "tenLop": "Lớp 7A2", "siSo": 40, "GVCN": "GV002" },
+            { "maLop": "8A1", "tenLop": "Lớp 8A1", "siSo": 38, "GVCN": "GV003" }
+          ]
+        };
+
+        // --- 2. QUẢN LÝ STATE ---
+        let appData = JSON.parse(localStorage.getItem('eSchoolData')) || seedData;
+        let currentEntity = ''; // 'hocsinh', 'giaovien', 'lophoc'
+        let currentItemEditId = null; // ID của item đang sửa
+        
+        // Phân trang & Tìm kiếm
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let filteredData = [];
+
+        // Lưu dữ liệu vào LocalStorage
+        function saveData() {
+            localStorage.setItem('eSchoolData', JSON.stringify(appData));
+        }
+
+        // Khởi tạo app khi load
+        window.onload = () => {
+            if(!localStorage.getItem('eSchoolData')) saveData(); // Lưu seed data lần đầu
+            switchView('dashboard');
+        };
+
+        // --- 3. UI XUYÊN SUỐT ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+
+        function switchView(viewName) {
+            // Đóng sidebar trên mobile nếu đang mở
+            if(window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('hidden')) toggleSidebar();
+
+            // Ẩn tất cả view
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            
+            // Xóa active menu
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${viewName}`).classList.add('active');
+
+            // Reset trạng thái tìm kiếm, trang
+            document.getElementById('search-input').value = '';
+            document.getElementById('sort-select').value = '';
+            currentPage = 1;
+
+            if(viewName === 'dashboard') {
+                document.getElementById('header-title').innerText = 'Tổng Quan';
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                renderDashboard();
+            } else if (viewName === 'thongke') {
+                document.getElementById('header-title').innerText = 'Báo Cáo - Thống Kê';
+                document.getElementById('view-thongke').classList.remove('hidden');
+                renderCharts();
+            } else {
+                // View List (Học sinh, giáo viên, lớp)
+                currentEntity = viewName;
+                document.getElementById('view-datalist').classList.remove('hidden');
+                
+                const titles = { 'hocsinh': 'Quản Lý Học Sinh', 'giaovien': 'Quản Lý Giáo Viên', 'lophoc': 'Quản Lý Lớp Học' };
+                document.getElementById('header-title').innerText = titles[viewName];
+                
+                // Hiện/ẩn tùy chọn sắp xếp điểm
+                if(viewName === 'hocsinh') document.querySelector('.sort-score').classList.remove('hidden');
+                else document.querySelector('.sort-score').classList.add('hidden');
+
+                loadDataList();
+            }
+        }
+
+        // --- 4. TÍNH TOÁN DỮ LIỆU ---
+        function getDTB(hs) {
+            return ((parseFloat(hs.diemToan) + parseFloat(hs.diemVan) + parseFloat(hs.diemAnh)) / 3).toFixed(1);
+        }
+        function getXepLoai(dtb) {
+            if (dtb >= 8.0) return '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Giỏi</span>';
+            if (dtb >= 6.5) return '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Khá</span>';
+            if (dtb >= 5.0) return '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">TB</span>';
+            return '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">Yếu</span>';
+        }
+
+        // --- 5. RENDER DASHBOARD ---
+        function renderDashboard() {
+            document.getElementById('stat-hs').innerText = appData.hocsinh.length;
+            document.getElementById('stat-gv').innerText = appData.giaovien.length;
+            document.getElementById('stat-lop').innerText = appData.lophoc.length;
+
+            // 5 HS mới nhất
+            const recentHS = [...appData.hocsinh].reverse().slice(0, 5);
+            document.getElementById('recent-hs-body').innerHTML = recentHS.map(hs => 
+                `<tr><td class="p-3 font-semibold text-primary">${hs.maHS}</td><td class="p-3">${hs.hoTen}</td><td class="p-3">${hs.lop}</td></tr>`
+            ).join('');
+
+            // 3 GV mới nhất
+            const recentGV = [...appData.giaovien].reverse().slice(0, 3);
+            document.getElementById('recent-gv-body').innerHTML = recentGV.map(gv => 
+                `<tr><td class="p-3 font-semibold text-green-600">${gv.maGV}</td><td class="p-3">${gv.hoTen}</td><td class="p-3">${gv.monDay}</td></tr>`
+            ).join('');
+        }
+
+        // --- 6. XỬ LÝ DANH SÁCH (CRUD - READ) ---
+        function loadDataList() {
+            filteredData = [...appData[currentEntity]];
+            applyFiltersAndRender();
+        }
+
+        function handleSearch() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            const sort = document.getElementById('sort-select').value;
+            
+            filteredData = appData[currentEntity].filter(item => {
+                const searchStr = Object.values(item).join(' ').toLowerCase();
+                return searchStr.includes(term);
+            });
+
+            // Sorting
+            if (sort === 'name_asc') {
+                filteredData.sort((a, b) => (a.hoTen || a.tenLop).localeCompare(b.hoTen || b.tenLop));
+            } else if (sort === 'name_desc') {
+                filteredData.sort((a, b) => (b.hoTen || b.tenLop).localeCompare(a.hoTen || a.tenLop));
+            } else if (sort === 'score_desc' && currentEntity === 'hocsinh') {
+                filteredData.sort((a, b) => getDTB(b) - getDTB(a));
+            }
+
+            currentPage = 1;
+            applyFiltersAndRender();
+        }
+        
+        function handleSort() { handleSearch(); }
+
+        function applyFiltersAndRender() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageData = filteredData.slice(start, end);
+
+            renderTableHeader();
+            renderTableBody(pageData);
+            renderPagination();
+        }
+
+        function renderTableHeader() {
+            const head = document.getElementById('table-head');
+            let tr = '';
+            if (currentEntity === 'hocsinh') {
+                tr = `<tr><th class="p-3 w-20">Mã HS</th><th class="p-3">Họ Tên</th><th class="p-3">Giới Tính</th><th class="p-3">Lớp</th><th class="p-3 text-center">ĐTB</th><th class="p-3 text-center">Xếp Loại</th><th class="p-3 text-center w-32">Thao Tác</th></tr>`;
+            } else if (currentEntity === 'giaovien') {
+                tr = `<tr><th class="p-3 w-20">Mã GV</th><th class="p-3">Họ Tên</th><th class="p-3">SĐT</th><th class="p-3">Môn Dạy</th><th class="p-3 text-center w-32">Thao Tác</th></tr>`;
+            } else {
+                tr = `<tr><th class="p-3 w-20">Mã Lớp</th><th class="p-3">Tên Lớp</th><th class="p-3">Sĩ Số</th><th class="p-3">GV Chủ Nhiệm</th><th class="p-3 text-center w-32">Thao Tác</th></tr>`;
+            }
+            head.innerHTML = tr;
+        }
+
+        function renderTableBody(data) {
+            const body = document.getElementById('table-body');
+            if(data.length === 0) {
+                body.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Không tìm thấy dữ liệu</td></tr>`;
+                return;
+            }
+
+            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : 'maLop');
+
+            let html = '';
+            data.forEach(item => {
+                const itemId = item[idField];
+                html += `<tr class="hover:bg-gray-50 transition-colors group">`;
+                
+                if (currentEntity === 'hocsinh') {
+                    const dtb = getDTB(item);
+                    html += `
+                        <td class="p-3 font-semibold text-primary">${item.maHS}</td>
+                        <td class="p-3 font-medium">${item.hoTen}</td>
+                        <td class="p-3">${item.gioiTinh}</td>
+                        <td class="p-3">${item.lop}</td>
+                        <td class="p-3 text-center font-bold text-red-600">${dtb}</td>
+                        <td class="p-3 text-center">${getXepLoai(dtb)}</td>
+                    `;
+                } else if (currentEntity === 'giaovien') {
+                    html += `
+                        <td class="p-3 font-semibold text-green-600">${item.maGV}</td>
+                        <td class="p-3 font-medium">${item.hoTen}</td>
+                        <td class="p-3">${item.sdt}</td>
+                        <td class="p-3 font-medium text-blue-600">${item.monDay}</td>
+                    `;
+                } else {
+                    // GVCN tên
+                    const gv = appData.giaovien.find(g => g.maGV === item.GVCN);
+                    const tenGV = gv ? gv.hoTen : '<span class="text-red-400">Trống</span>';
+                    html += `
+                        <td class="p-3 font-semibold text-purple-600">${item.maLop}</td>
+                        <td class="p-3 font-medium">${item.tenLop}</td>
+                        <td class="p-3">${item.siSo}</td>
+                        <td class="p-3">${tenGV}</td>
+                    `;
+                }
+
+                // Action buttons
+                html += `
+                    <td class="p-3 text-center">
+                        <div class="flex justify-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="viewDetail('${itemId}')" title="Xem" class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"><i class="fas fa-eye"></i></button>
+                            <button onclick="openFormModal('${itemId}')" title="Sửa" class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-500 hover:text-white transition-colors"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteItem('${itemId}')" title="Xóa" class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-colors"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            body.innerHTML = html;
+        }
+
+        function renderPagination() {
+            const totalItems = filteredData.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            
+            let startText = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+            let endText = Math.min(currentPage * itemsPerPage, totalItems);
+            document.getElementById('pagination-info').innerText = `Hiển thị ${startText} - ${endText} của ${totalItems} dòng`;
+
+            let controls = `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="px-2 py-1 border rounded text-gray-400 cursor-not-allowed"' : 'class="px-2 py-1 border rounded hover:bg-gray-100"'}><i class="fas fa-chevron-left"></i></button>`;
+            
+            for(let i = 1; i <= totalPages; i++) {
+                if(i === currentPage) {
+                    controls += `<button class="px-3 py-1 bg-primary text-white rounded font-bold">${i}</button>`;
+                } else if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    controls += `<button onclick="changePage(${i})" class="px-3 py-1 border rounded hover:bg-gray-100">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    controls += `<span class="px-2 py-1">...</span>`;
+                }
+            }
+
+            controls += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="px-2 py-1 border rounded text-gray-400 cursor-not-allowed"' : 'class="px-2 py-1 border rounded hover:bg-gray-100"'}><i class="fas fa-chevron-right"></i></button>`;
+            
+            document.getElementById('pagination-controls').innerHTML = controls;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                applyFiltersAndRender();
+            }
+        }
+
+        // --- 7. MODALS VÀ FORM (CRUD - CREATE/UPDATE) ---
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            // Trigger reflow for animation
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            modal.querySelector('div').classList.remove('scale-95');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function openFormModal(id = null) {
+            currentItemEditId = id;
+            const title = id ? `Sửa Thông Tin` : `Thêm Mới`;
+            document.getElementById('modal-title').innerText = title;
+            
+            const fieldsContainer = document.getElementById('form-fields');
+            let item = {};
+            if (id) {
+                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : 'maLop');
+                item = appData[currentEntity].find(x => x[idField] === id);
+            } else {
+                // Auto generate ID for new item
+                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : 'maLop');
+                const prefix = currentEntity === 'hocsinh' ? 'HS' : (currentEntity === 'giaovien' ? 'GV' : 'L');
+                item[idField] = prefix + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            }
+
+            // Sinh HTML Form linh hoạt dựa trên Entity
+            let formHTML = '';
+            if (currentEntity === 'hocsinh') {
+                formHTML = `
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Mã HS *</label><input type="text" name="maHS" value="${item.maHS || ''}" required readonly class="w-full border rounded px-3 py-2 bg-gray-100"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Họ Tên *</label><input type="text" name="hoTen" value="${item.hoTen || ''}" required class="w-full border rounded px-3 py-2 focus:border-primary focus:outline-none"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Ngày Sinh *</label><input type="date" name="ngaySinh" value="${item.ngaySinh || ''}" required class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Giới Tính *</label>
+                        <select name="gioiTinh" required class="w-full border rounded px-3 py-2">
+                            <option value="Nam" ${item.gioiTinh === 'Nam' ? 'selected' : ''}>Nam</option>
+                            <option value="Nữ" ${item.gioiTinh === 'Nữ' ? 'selected' : ''}>Nữ</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Lớp *</label><input type="text" name="lop" value="${item.lop || ''}" required class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Số Điện Thoại</label><input type="tel" name="sdt" value="${item.sdt || ''}" pattern="[0-9]{10}" class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1 md:col-span-2"><label class="block text-sm font-medium mb-1">Địa Chỉ</label><input type="text" name="diaChi" value="${item.diaChi || ''}" class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1 md:col-span-2"><label class="block text-sm font-medium mb-1">Email</label><input type="email" name="email" value="${item.email || ''}" class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1 text-blue-600">Điểm Toán *</label><input type="number" step="0.1" min="0" max="10" name="diemToan" value="${item.diemToan || ''}" required class="w-full border rounded px-3 py-2 font-bold"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1 text-blue-600">Điểm Văn *</label><input type="number" step="0.1" min="0" max="10" name="diemVan" value="${item.diemVan || ''}" required class="w-full border rounded px-3 py-2 font-bold"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1 text-blue-600">Điểm Anh *</label><input type="number" step="0.1" min="0" max="10" name="diemAnh" value="${item.diemAnh || ''}" required class="w-full border rounded px-3 py-2 font-bold"></div>
+                `;
+            } else if (currentEntity === 'giaovien') {
+                 formHTML = `
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Mã GV *</label><input type="text" name="maGV" value="${item.maGV || ''}" required readonly class="w-full border rounded px-3 py-2 bg-gray-100"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Họ Tên *</label><input type="text" name="hoTen" value="${item.hoTen || ''}" required class="w-full border rounded px-3 py-2 focus:border-primary focus:outline-none"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Ngày Sinh *</label><input type="date" name="ngaySinh" value="${item.ngaySinh || ''}" required class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Giới Tính *</label>
+                        <select name="gioiTinh" required class="w-full border rounded px-3 py-2">
+                            <option value="Nam" ${item.gioiTinh === 'Nam' ? 'selected' : ''}>Nam</option>
+                            <option value="Nữ" ${item.gioiTinh === 'Nữ' ? 'selected' : ''}>Nữ</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Môn Dạy *</label><input type="text" name="monDay" value="${item.monDay || ''}" required class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Số Điện Thoại</label><input type="tel" name="sdt" value="${item.sdt || ''}" pattern="[0-9]{10}" class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1 md:col-span-2"><label class="block text-sm font-medium mb-1">Email</label><input type="email" name="email" value="${item.email || ''}" class="w-full border rounded px-3 py-2"></div>
+                `;
+            } else {
+                // Lớp học
+                let optionsGV = appData.giaovien.map(gv => `<option value="${gv.maGV}" ${item.GVCN === gv.maGV ? 'selected' : ''}>${gv.hoTen} (${gv.monDay})</option>`).join('');
+                formHTML = `
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Mã Lớp *</label><input type="text" name="maLop" value="${item.maLop || ''}" required ${id ? 'readonly class="w-full border rounded px-3 py-2 bg-gray-100"' : 'class="w-full border rounded px-3 py-2"'}></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Tên Lớp *</label><input type="text" name="tenLop" value="${item.tenLop || ''}" required class="w-full border rounded px-3 py-2 focus:border-primary focus:outline-none"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">Sĩ Số *</label><input type="number" min="1" name="siSo" value="${item.siSo || ''}" required class="w-full border rounded px-3 py-2"></div>
+                    <div class="col-span-1"><label class="block text-sm font-medium mb-1">GV Chủ Nhiệm</label>
+                        <select name="GVCN" class="w-full border rounded px-3 py-2">
+                            <option value="">-- Chọn GVCN --</option>
+                            ${optionsGV}
+                        </select>
+                    </div>
+                `;
+            }
+            fieldsContainer.innerHTML = formHTML;
+            openModal('form-modal');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const dataObj = Object.fromEntries(formData.entries());
+            
+            // Ép kiểu số cho điểm
+            if(dataObj.diemToan) dataObj.diemToan = parseFloat(dataObj.diemToan);
+            if(dataObj.diemVan) dataObj.diemVan = parseFloat(dataObj.diemVan);
+            if(dataObj.diemAnh) dataObj.diemAnh = parseFloat(dataObj.diemAnh);
+
+            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : 'maLop');
+            
+            if (currentItemEditId) {
+                // Update
+                const index = appData[currentEntity].findIndex(x => x[idField] === currentItemEditId);
+                appData[currentEntity][index] = { ...appData[currentEntity][index], ...dataObj };
+            } else {
+                // Create
+                // Kiểm tra trùng mã (chỉ dành cho Lớp học tự nhập mã)
+                if(currentEntity === 'lophoc' && appData[currentEntity].some(x => x.maLop === dataObj.maLop)){
+                    alert("Mã lớp đã tồn tại!"); return;
+                }
+                appData[currentEntity].push(dataObj);
+            }
+
+            saveData();
+            closeModal('form-modal');
+            handleSearch(); // Reload table
+            
+            // Show toast/thông báo đơn giản
+            const action = currentItemEditId ? 'Cập nhật' : 'Thêm mới';
+            alert(`${action} thành công!`);
+        }
+
+        // --- 8. XÓA VÀ XEM CHI TIẾT ---
+        function deleteItem(id) {
+            if(confirm('Bạn có chắc chắn muốn xóa dữ liệu này? Hành động này không thể hoàn tác.')) {
+                const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : 'maLop');
+                appData[currentEntity] = appData[currentEntity].filter(x => x[idField] !== id);
+                saveData();
+                
+                // Nếu xóa dòng cuối của trang
+                if(filteredData.length % itemsPerPage === 1 && currentPage > 1) currentPage--;
+                handleSearch();
+            }
+        }
+
+        function viewDetail(id) {
+            const idField = currentEntity === 'hocsinh' ? 'maHS' : (currentEntity === 'giaovien' ? 'maGV' : 'maLop');
+            const item = appData[currentEntity].find(x => x[idField] === id);
+            const content = document.getElementById('detail-content');
+            let html = '';
+
+            if(currentEntity === 'hocsinh') {
+                const dtb = getDTB(item);
+                html = `
+                    <div class="flex items-center gap-4 mb-6 border-b pb-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 text-3xl"><i class="fas fa-user-graduate"></i></div>
+                        <div><h2 class="text-xl font-bold">${item.hoTen}</h2><p class="text-gray-500">${item.maHS} | Lớp: <span class="font-bold text-primary">${item.lop}</span></p></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-3 text-sm">
+                        <p><span class="text-gray-500 block text-xs">Ngày sinh</span> ${item.ngaySinh.split('-').reverse().join('/')}</p>
+                        <p><span class="text-gray-500 block text-xs">Giới tính</span> ${item.gioiTinh}</p>
+                        <p><span class="text-gray-500 block text-xs">Điện thoại</span> ${item.sdt || '-'}</p>
+                        <p><span class="text-gray-500 block text-xs">Email</span> ${item.email || '-'}</p>
+                        <p class="col-span-2"><span class="text-gray-500 block text-xs">Địa chỉ</span> ${item.diaChi || '-'}</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-bold mb-2 text-textColor">Kết Quả Học Tập</h4>
+                        <div class="flex justify-between bg-gray-50 p-3 rounded-lg border">
+                            <div class="text-center"><p class="text-xs text-gray-500">Toán</p><p class="font-bold text-lg text-blue-600">${item.diemToan}</p></div>
+                            <div class="text-center"><p class="text-xs text-gray-500">Văn</p><p class="font-bold text-lg text-blue-600">${item.diemVan}</p></div>
+                            <div class="text-center"><p class="text-xs text-gray-500">Anh</p><p class="font-bold text-lg text-blue-600">${item.diemAnh}</p></div>
+                            <div class="text-center border-l pl-4"><p class="text-xs text-gray-500">ĐTB</p><p class="font-bold text-xl text-red-600">${dtb}</p></div>
+                            <div class="text-center"><p class="text-xs text-gray-500">Xếp loại</p><p class="mt-1">${getXepLoai(dtb)}</p></div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentEntity === 'giaovien') {
+                html = `
+                    <div class="flex items-center gap-4 mb-6 border-b pb-4">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-3xl"><i class="fas fa-chalkboard-teacher"></i></div>
+                        <div><h2 class="text-xl font-bold">${item.hoTen}</h2><p class="text-gray-500">${item.maGV} | Môn dạy: <span class="font-bold text-primary">${item.monDay}</span></p></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-3 text-sm">
+                        <p><span class="text-gray-500 block text-xs">Ngày sinh</span> ${item.ngaySinh.split('-').reverse().join('/')}</p>
+                        <p><span class="text-gray-500 block text-xs">Giới tính</span> ${item.gioiTinh}</p>
+                        <p><span class="text-gray-500 block text-xs">Điện thoại</span> ${item.sdt || '-'}</p>
+                        <p><span class="text-gray-500 block text-xs">Email</span> ${item.email || '-'}</p>
+                    </div>
+                `;
+            } else {
+                const gv = appData.giaovien.find(g => g.maGV === item.GVCN);
+                const tenGV = gv ? `${gv.hoTen} (${gv.sdt})` : 'Chưa phân công';
+                html = `
+                    <div class="text-center mb-6 border-b pb-4">
+                        <div class="w-16 h-16 mx-auto bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-3xl mb-2"><i class="fas fa-users"></i></div>
+                        <h2 class="text-xl font-bold">${item.tenLop}</h2><p class="text-gray-500">Mã Lớp: ${item.maLop}</p>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Sĩ số quy định</span><span class="font-bold">${item.siSo} học sinh</span></div>
+                        <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Sĩ số thực tế</span><span class="font-bold text-primary">${appData.hocsinh.filter(hs => hs.lop === item.maLop).length} học sinh</span></div>
+                        <div class="flex justify-between border-b pb-2"><span class="text-gray-500">Giáo viên chủ nhiệm</span><span class="font-bold">${tenGV}</span></div>
+                    </div>
+                `;
+            }
+            content.innerHTML = html;
+            openModal('detail-modal');
+        }
+
+        // --- 9. XUẤT EXCEL (CSV Hỗ trợ Tiếng Việt) ---
+        function exportExcel() {
+            if(filteredData.length === 0) return alert('Không có dữ liệu để xuất!');
+            
+            let csvContent = '\uFEFF'; // BOM for UTF-8 Excel support
+            let headers = [];
+            
+            if(currentEntity === 'hocsinh') {
+                headers = ['Mã HS', 'Họ Tên', 'Ngày Sinh', 'Giới Tính', 'Lớp', 'Toán', 'Văn', 'Anh', 'ĐTB'];
+                csvContent += headers.join(',') + '\r\n';
+                filteredData.forEach(item => {
+                    const row = [item.maHS, `"${item.hoTen}"`, item.ngaySinh, item.gioiTinh, item.lop, item.diemToan, item.diemVan, item.diemAnh, getDTB(item)];
+                    csvContent += row.join(',') + '\r\n';
+                });
+            } else if (currentEntity === 'giaovien') {
+                headers = ['Mã GV', 'Họ Tên', 'Ngày Sinh', 'Giới Tính', 'Môn Dạy', 'SĐT', 'Email'];
+                csvContent += headers.join(',') + '\r\n';
+                filteredData.forEach(item => {
+                    const row = [item.maGV, `"${item.hoTen}"`, item.ngaySinh, item.gioiTinh, item.monDay, item.sdt, item.email];
+                    csvContent += row.join(',') + '\r\n';
+                });
+            } else {
+                 headers = ['Mã Lớp', 'Tên Lớp', 'Sĩ Số', 'Mã GVCN'];
+                csvContent += headers.join(',') + '\r\n';
+                filteredData.forEach(item => {
+                    const row = [item.maLop, `"${item.tenLop}"`, item.siSo, item.GVCN];
+                    csvContent += row.join(',') + '\r\n';
+                });
+            }
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `DanhSach_${currentEntity}_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- 10. VẼ BIỂU ĐỒ (CHART.JS) ---
+        let barChartInstance = null;
+        let pieChartInstance = null;
+
+        function renderCharts() {
+            // 1. Chuẩn bị dữ liệu cho Biểu đồ cột (ĐTB theo lớp)
+            const classScores = {}; // { '6A1': { sum: 0, count: 0 }, ... }
+            appData.hocsinh.forEach(hs => {
+                if(!classScores[hs.lop]) classScores[hs.lop] = { sum: 0, count: 0 };
+                classScores[hs.lop].sum += parseFloat(getDTB(hs));
+                classScores[hs.lop].count++;
+            });
+
+            const labelsBar = Object.keys(classScores);
+            const dataBar = labelsBar.map(lop => (classScores[lop].sum / classScores[lop].count).toFixed(2));
+
+            // 2. Chuẩn bị dữ liệu cho Biểu đồ tròn (Tỷ lệ học lực)
+            let ranks = { 'Giỏi': 0, 'Khá': 0, 'Trung Bình': 0, 'Yếu': 0 };
+            appData.hocsinh.forEach(hs => {
+                const dtb = parseFloat(getDTB(hs));
+                if (dtb >= 8.0) ranks['Giỏi']++;
+                else if (dtb >= 6.5) ranks['Khá']++;
+                else if (dtb >= 5.0) ranks['Trung Bình']++;
+                else ranks['Yếu']++;
+            });
+
+            // Xóa chart cũ nếu có để tránh lỗi hover
+            if(barChartInstance) barChartInstance.destroy();
+            if(pieChartInstance) pieChartInstance.destroy();
+
+            // Vẽ Bar Chart
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: labelsBar,
+                    datasets: [{
+                        label: 'Điểm Trung Bình',
+                        data: dataBar,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true, max: 10 } } }
+            });
+
+            // Vẽ Pie Chart
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            pieChartInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(ranks),
+                    datasets: [{
+                        data: Object.values(ranks),
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], // Lục, Lam, Cam, Đỏ
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+    </script>
+</body>
+</html>
