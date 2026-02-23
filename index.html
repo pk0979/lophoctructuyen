@@ -28,7 +28,7 @@
         }
     </script>
     <style>
-        body { font-family: Arial, Helvetica, sans-serif; background-color: #f8f9fa; color: #343a40; padding-bottom: 50px; }
+        body { font-family: Arial, Helvetica, sans-serif; background-color: #f8f9fa; color: #343a40; padding-bottom: 50px; overflow: hidden; }
         .sidebar-item { border-left: 4px solid transparent; transition: all 0.3s; }
         .sidebar-item:hover, .sidebar-item.active { background-color: #334155; border-left: 4px solid #3b82f6; color: #ffffff; }
         /* Tùy chỉnh thanh cuộn */
@@ -38,191 +38,269 @@
         ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
         /* Modal transition */
         .modal-bg { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
+        .bg-auth { background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="bg-gray-100">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-[#1e293b] text-gray-300 flex flex-col hidden md:flex z-20 transition-all duration-300 shadow-xl" id="sidebar">
-        <!-- Logo -->
-        <div class="p-5 font-bold text-2xl flex items-center text-blue-500">
-            <i class="fas fa-graduation-cap mr-3"></i> <span class="text-white">VNClass</span>
-            <button class="md:hidden text-white ml-auto" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+    <!-- MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ -->
+    <div id="auth-container" class="fixed inset-0 bg-auth flex items-center justify-center z-50">
+        
+        <!-- Form Đăng nhập -->
+        <div id="login-form-container" class="bg-white p-8 rounded-xl shadow-2xl w-96 transform transition-all duration-300">
+            <div class="text-center mb-6">
+                <i class="fas fa-graduation-cap text-5xl text-blue-600 mb-3 drop-shadow-md"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Đăng Nhập VNClass</h2>
+                <p class="text-sm text-gray-500 mt-1">Quản lý lớp học thông minh</p>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="login-username" required class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors" value="admin">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+                        <input type="password" id="login-password" required class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors" value="123">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30">
+                    Đăng Nhập
+                </button>
+            </form>
+            <div class="mt-6 border-t border-gray-200 pt-4 text-center">
+                <p class="text-sm text-gray-600">Chưa có tài khoản? <a href="#" onclick="toggleAuthMode('register')" class="text-blue-600 font-semibold hover:underline">Đăng ký ngay</a></p>
+            </div>
         </div>
 
-        <!-- User Info -->
-        <div class="px-5 pb-5 mb-2 border-b border-slate-700 flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-lg">
-                T
+        <!-- Form Đăng ký -->
+        <div id="register-form-container" class="bg-white p-8 rounded-xl shadow-2xl w-96 hidden transform transition-all duration-300">
+            <div class="text-center mb-6">
+                <i class="fas fa-user-plus text-5xl text-green-500 mb-3 drop-shadow-md"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Đăng Ký Tài Khoản</h2>
+                <p class="text-sm text-gray-500 mt-1">Tạo tài khoản giáo viên mới</p>
             </div>
-            <div class="flex flex-col">
-                <span class="font-bold text-base text-gray-100 leading-tight">Tống Phước Khải</span>
-                <span class="text-sm text-slate-400 mt-1">Giáo viên</span>
+            <form onsubmit="handleRegister(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Họ và tên hiển thị</label>
+                    <div class="relative">
+                        <i class="fas fa-id-card absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="reg-fullname" required class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition-colors" placeholder="Nguyễn Văn A">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="reg-username" required class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition-colors" placeholder="Tạo tên đăng nhập">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+                        <input type="password" id="reg-password" required class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition-colors" placeholder="Tạo mật khẩu">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-green-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-green-600 transition-colors shadow-lg shadow-green-500/30">
+                    Đăng Ký
+                </button>
+            </form>
+            <div class="mt-6 border-t border-gray-200 pt-4 text-center">
+                <p class="text-sm text-gray-600">Đã có tài khoản? <a href="#" onclick="toggleAuthMode('login')" class="text-green-600 font-semibold hover:underline">Đăng nhập</a></p>
             </div>
         </div>
-
-        <nav class="flex-1 py-2 overflow-y-auto space-y-1">
-            <a href="#" onclick="switchView('dashboard')" class="sidebar-item active block py-3 px-5 text-sm" id="nav-dashboard">
-                <i class="fas fa-chart-pie w-6 text-center mr-2 text-lg"></i> Tổng quan
-            </a>
-            <a href="#" onclick="switchView('lophoc')" class="sidebar-item block py-3 px-5 text-sm" id="nav-lophoc">
-                <i class="fas fa-laptop w-6 text-center mr-2 text-lg"></i> Quản lý Lớp học
-            </a>
-            <a href="#" onclick="switchView('hocsinh')" class="sidebar-item block py-3 px-5 text-sm" id="nav-hocsinh">
-                <i class="fas fa-user-friends w-6 text-center mr-2 text-lg"></i> Danh sách Học sinh
-            </a>
-            <a href="#" onclick="switchView('baihoc')" class="sidebar-item block py-3 px-5 text-sm" id="nav-baihoc">
-                <i class="fas fa-book w-6 text-center mr-2 text-lg"></i> Quản lý Bài học
-            </a>
-            <a href="#" onclick="switchView('baitap')" class="sidebar-item block py-3 px-5 text-sm" id="nav-baitap">
-                <i class="fas fa-list-ul w-6 text-center mr-2 text-lg"></i> Quản lý Bài tập
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-slate-700">
-            <a href="#" onclick="alert('Tính năng Đăng xuất')" class="sidebar-item block py-3 px-5 text-sm rounded">
-                <i class="fas fa-sign-out-alt w-6 text-center mr-2 text-lg"></i> Đăng xuất
-            </a>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden relative">
-        <!-- Header -->
-        <header class="bg-white shadow-sm p-4 flex justify-between items-center z-10">
-            <button class="text-gray-500 hover:text-primary md:hidden" onclick="toggleSidebar()">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
-            <h2 class="text-xl font-semibold text-textColor hidden md:block" id="header-title">Tổng Quan</h2>
-            <div class="flex items-center">
-                <!-- Profile đã được chuyển sang sidebar -->
-            </div>
-        </header>
-
-        <!-- Dynamic Views Area -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-background" id="main-content">
-            
-            <!-- VIEW: DASHBOARD -->
-            <div id="view-dashboard" class="view-section">
-                <!-- Thống kê Card -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-blue-500 flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-secondary uppercase font-bold">Tổng Học Sinh</p>
-                            <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-hs">0</h3>
-                        </div>
-                        <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl">
-                            <i class="fas fa-user-graduate"></i>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500 flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-secondary uppercase font-bold">Tổng Giáo Viên</p>
-                            <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-gv">0</h3>
-                        </div>
-                        <div class="w-12 h-12 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-xl">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-purple-500 flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-secondary uppercase font-bold">Tổng Lớp Học</p>
-                            <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-lop">0</h3>
-                        </div>
-                        <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center text-xl">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Học sinh mới -->
-                    <div class="bg-white rounded-lg shadow">
-                        <div class="p-4 border-b border-gray-200">
-                            <h4 class="font-bold text-textColor"><i class="fas fa-star text-yellow-500 mr-2"></i> Học sinh mới nhập học</h4>
-                        </div>
-                        <div class="p-0">
-                            <table class="w-full text-sm text-left">
-                                <thead class="bg-gray-50 text-secondary">
-                                    <tr><th class="p-3">Mã HS</th><th class="p-3">Họ Tên</th><th class="p-3">Lớp</th></tr>
-                                </thead>
-                                <tbody id="recent-hs-body" class="divide-y divide-gray-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <!-- Giáo viên mới -->
-                    <div class="bg-white rounded-lg shadow">
-                        <div class="p-4 border-b border-gray-200">
-                            <h4 class="font-bold text-textColor"><i class="fas fa-award text-blue-500 mr-2"></i> Giáo viên mới tuyển dụng</h4>
-                        </div>
-                        <div class="p-0">
-                            <table class="w-full text-sm text-left">
-                                <thead class="bg-gray-50 text-secondary">
-                                    <tr><th class="p-3">Mã GV</th><th class="p-3">Họ Tên</th><th class="p-3">Môn Dạy</th></tr>
-                                </thead>
-                                <tbody id="recent-gv-body" class="divide-y divide-gray-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW: DATA LISTS (Dùng chung cho Học Sinh, Giáo Viên, Lớp) -->
-            <div id="view-datalist" class="view-section hidden">
-                <div class="bg-white rounded-lg shadow p-4 mb-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
-                    <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                        <input type="text" id="search-input" placeholder="Tìm kiếm..." class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary w-full md:w-64" oninput="handleSearch()">
-                        <select id="sort-select" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" onchange="handleSort()">
-                            <option value="">Sắp xếp mặc định</option>
-                            <option value="name_asc">Tên (A-Z)</option>
-                            <option value="name_desc">Tên (Z-A)</option>
-                            <option value="score_desc" class="sort-score hidden">Điểm (Cao - Thấp)</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="exportExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors"><i class="fas fa-file-excel mr-1"></i> Xuất Excel</button>
-                        <button onclick="openFormModal()" class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors"><i class="fas fa-plus mr-1"></i> Thêm Mới</button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow overflow-x-auto">
-                    <table class="w-full text-sm text-left whitespace-nowrap">
-                        <thead class="bg-gray-100 text-secondary font-semibold" id="table-head">
-                            <!-- Gen qua JS -->
-                        </thead>
-                        <tbody id="table-body" class="divide-y divide-gray-200">
-                            <!-- Gen qua JS -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Phân trang -->
-                <div class="flex justify-between items-center mt-4">
-                    <div class="text-sm text-secondary" id="pagination-info">Hiển thị 1 - 10 của 100</div>
-                    <div class="flex gap-1" id="pagination-controls">
-                        <!-- Gen qua JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW: THỐNG KÊ -->
-            <div id="view-thongke" class="view-section hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-lg shadow p-4">
-                        <h4 class="font-bold text-textColor text-center mb-4">Điểm Trung Bình Theo Lớp</h4>
-                        <canvas id="barChart" height="250"></canvas>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-4">
-                        <h4 class="font-bold text-textColor text-center mb-4">Tỷ Lệ Học Lực Học Sinh</h4>
-                        <div class="w-2/3 mx-auto">
-                            <canvas id="pieChart" height="250"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
     </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-wrapper" class="flex h-screen w-full overflow-hidden hidden">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[#1e293b] text-gray-300 flex flex-col hidden md:flex z-20 transition-all duration-300 shadow-xl" id="sidebar">
+            <!-- Logo -->
+            <div class="p-5 font-bold text-2xl flex items-center text-blue-500">
+                <i class="fas fa-graduation-cap mr-3"></i> <span class="text-white">VNClass</span>
+                <button class="md:hidden text-white ml-auto" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- User Info -->
+            <div class="px-5 pb-5 mb-2 border-b border-slate-700 flex items-center gap-3">
+                <div id="user-avatar-text" class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-lg uppercase">
+                    T
+                </div>
+                <div class="flex flex-col">
+                    <span id="user-name-text" class="font-bold text-base text-gray-100 leading-tight">Tống Phước Khải</span>
+                    <span id="user-role-text" class="text-sm text-slate-400 mt-1">Giáo viên</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 py-2 overflow-y-auto space-y-1">
+                <a href="#" onclick="switchView('dashboard')" class="sidebar-item active block py-3 px-5 text-sm" id="nav-dashboard">
+                    <i class="fas fa-chart-pie w-6 text-center mr-2 text-lg"></i> Tổng quan
+                </a>
+                <a href="#" onclick="switchView('lophoc')" class="sidebar-item block py-3 px-5 text-sm" id="nav-lophoc">
+                    <i class="fas fa-laptop w-6 text-center mr-2 text-lg"></i> Quản lý Lớp học
+                </a>
+                <a href="#" onclick="switchView('hocsinh')" class="sidebar-item block py-3 px-5 text-sm" id="nav-hocsinh">
+                    <i class="fas fa-user-friends w-6 text-center mr-2 text-lg"></i> Danh sách Học sinh
+                </a>
+                <a href="#" onclick="switchView('baihoc')" class="sidebar-item block py-3 px-5 text-sm" id="nav-baihoc">
+                    <i class="fas fa-book w-6 text-center mr-2 text-lg"></i> Quản lý Bài học
+                </a>
+                <a href="#" onclick="switchView('baitap')" class="sidebar-item block py-3 px-5 text-sm" id="nav-baitap">
+                    <i class="fas fa-list-ul w-6 text-center mr-2 text-lg"></i> Quản lý Bài tập
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-slate-700">
+                <a href="#" onclick="handleLogout()" class="sidebar-item block py-3 px-5 text-sm rounded cursor-pointer hover:bg-red-500/20 hover:text-red-400 hover:border-l-red-500 text-gray-400 transition-colors">
+                    <i class="fas fa-sign-out-alt w-6 text-center mr-2 text-lg"></i> Đăng xuất
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden relative">
+            <!-- Header -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center z-10">
+                <button class="text-gray-500 hover:text-primary md:hidden" onclick="toggleSidebar()">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h2 class="text-xl font-semibold text-textColor hidden md:block" id="header-title">Tổng Quan</h2>
+                <div class="flex items-center">
+                    <!-- Profile đã được chuyển sang sidebar -->
+                </div>
+            </header>
+
+            <!-- Dynamic Views Area -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-background" id="main-content">
+                
+                <!-- VIEW: DASHBOARD -->
+                <div id="view-dashboard" class="view-section">
+                    <!-- Thống kê Card -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow p-5 border-l-4 border-blue-500 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-secondary uppercase font-bold">Tổng Học Sinh</p>
+                                <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-hs">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-secondary uppercase font-bold">Tổng Giáo Viên</p>
+                                <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-gv">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-xl">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-5 border-l-4 border-purple-500 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-secondary uppercase font-bold">Tổng Lớp Học</p>
+                                <h3 class="text-2xl font-bold text-textColor mt-1" id="stat-lop">0</h3>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center text-xl">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Học sinh mới -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-4 border-b border-gray-200">
+                                <h4 class="font-bold text-textColor"><i class="fas fa-star text-yellow-500 mr-2"></i> Học sinh mới nhập học</h4>
+                            </div>
+                            <div class="p-0">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-50 text-secondary">
+                                        <tr><th class="p-3">Mã HS</th><th class="p-3">Họ Tên</th><th class="p-3">Lớp</th></tr>
+                                    </thead>
+                                    <tbody id="recent-hs-body" class="divide-y divide-gray-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Giáo viên mới -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-4 border-b border-gray-200">
+                                <h4 class="font-bold text-textColor"><i class="fas fa-award text-blue-500 mr-2"></i> Giáo viên mới tuyển dụng</h4>
+                            </div>
+                            <div class="p-0">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-50 text-secondary">
+                                        <tr><th class="p-3">Mã GV</th><th class="p-3">Họ Tên</th><th class="p-3">Môn Dạy</th></tr>
+                                    </thead>
+                                    <tbody id="recent-gv-body" class="divide-y divide-gray-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: DATA LISTS (Dùng chung cho Học Sinh, Giáo Viên, Lớp) -->
+                <div id="view-datalist" class="view-section hidden">
+                    <div class="bg-white rounded-lg shadow p-4 mb-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                        <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                            <input type="text" id="search-input" placeholder="Tìm kiếm..." class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary w-full md:w-64" oninput="handleSearch()">
+                            <select id="sort-select" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary" onchange="handleSort()">
+                                <option value="">Sắp xếp mặc định</option>
+                                <option value="name_asc">Tên (A-Z)</option>
+                                <option value="name_desc">Tên (Z-A)</option>
+                                <option value="score_desc" class="sort-score hidden">Điểm (Cao - Thấp)</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="exportExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors"><i class="fas fa-file-excel mr-1"></i> Xuất Excel</button>
+                            <button onclick="openFormModal()" class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors"><i class="fas fa-plus mr-1"></i> Thêm Mới</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow overflow-x-auto">
+                        <table class="w-full text-sm text-left whitespace-nowrap">
+                            <thead class="bg-gray-100 text-secondary font-semibold" id="table-head">
+                                <!-- Gen qua JS -->
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-gray-200">
+                                <!-- Gen qua JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Phân trang -->
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="text-sm text-secondary" id="pagination-info">Hiển thị 1 - 10 của 100</div>
+                        <div class="flex gap-1" id="pagination-controls">
+                            <!-- Gen qua JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: THỐNG KÊ -->
+                <div id="view-thongke" class="view-section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <h4 class="font-bold text-textColor text-center mb-4">Điểm Trung Bình Theo Lớp</h4>
+                            <canvas id="barChart" height="250"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <h4 class="font-bold text-textColor text-center mb-4">Tỷ Lệ Học Lực Học Sinh</h4>
+                            <div class="w-2/3 mx-auto">
+                                <canvas id="pieChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div> <!-- END MAIN APP CONTAINER -->
 
     <!-- FOOTER BẢN QUYỀN (Fixed Bottom) -->
     <footer class="fixed bottom-0 w-full bg-footerBg text-white py-3 px-4 text-center text-sm z-30 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
@@ -270,6 +348,9 @@
     <script>
         // --- 1. DỮ LIỆU KHỞI TẠO (JSON) ---
         const seedData = {
+          "users": [
+            { "username": "admin", "password": "123", "name": "Tống Phước Khải", "role": "Giáo viên", "avatar": "T" }
+          ],
           "hocsinh": [
             { "maHS": "HS001", "hoTen": "Nguyễn Văn An", "ngaySinh": "2008-05-20", "gioiTinh": "Nam", "lop": "6A1", "diaChi": "123 Đường ABC, TP.HCM", "email": "an.nguyen@example.com", "sdt": "0901234567", "diemToan": 8.5, "diemVan": 7.0, "diemAnh": 9.0 },
             { "maHS": "HS002", "hoTen": "Trần Thị Bình", "ngaySinh": "2007-08-15", "gioiTinh": "Nữ", "lop": "7A2", "diaChi": "456 Đường DEF, TP.HCM", "email": "binh.tran@example.com", "sdt": "0912345678", "diemToan": 9.0, "diemVan": 8.0, "diemAnh": 8.5 },
@@ -299,6 +380,7 @@
 
         // --- 2. QUẢN LÝ STATE ---
         let appData = JSON.parse(localStorage.getItem('eSchoolData')) || seedData;
+        let currentUser = JSON.parse(localStorage.getItem('eSchoolUser')) || null;
         let currentEntity = ''; // 'hocsinh', 'giaovien', 'lophoc', 'baitap', 'baihoc'
         let currentItemEditId = null; // ID của item đang sửa
         
@@ -316,12 +398,105 @@
         window.onload = () => {
             if(!localStorage.getItem('eSchoolData')) saveData(); // Lưu seed data lần đầu
             
-            // Cập nhật dữ liệu bài tập cho các máy đã lưu bản cũ trước đó
+            // Cập nhật dữ liệu bài tập và tài khoản cho các máy đã lưu bản cũ trước đó
             if(!appData.baitap) { appData.baitap = seedData.baitap; saveData(); }
             if(!appData.baihoc) { appData.baihoc = seedData.baihoc; saveData(); }
+            if(!appData.users) { appData.users = seedData.users; saveData(); }
             
-            switchView('dashboard');
+            checkAuth(); // Kiểm tra đăng nhập
         };
+
+        // --- XỬ LÝ ĐĂNG NHẬP / ĐĂNG KÝ / ĐĂNG XUẤT ---
+        function checkAuth() {
+            if (currentUser) {
+                // Đã đăng nhập: Ẩn auth, Hiện app
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-wrapper').classList.remove('hidden');
+                
+                // Cập nhật thông tin profile trên Sidebar
+                document.getElementById('user-name-text').innerText = currentUser.name;
+                document.getElementById('user-role-text').innerText = currentUser.role || 'Giáo viên';
+                document.getElementById('user-avatar-text').innerText = currentUser.name.charAt(0).toUpperCase();
+
+                switchView('dashboard'); // Mở trang tổng quan
+            } else {
+                // Chưa đăng nhập: Hiện auth, Ẩn app
+                document.getElementById('auth-container').classList.remove('hidden');
+                document.getElementById('app-wrapper').classList.add('hidden');
+            }
+        }
+
+        function toggleAuthMode(mode) {
+            if (mode === 'register') {
+                document.getElementById('login-form-container').classList.add('hidden');
+                document.getElementById('register-form-container').classList.remove('hidden');
+            } else {
+                document.getElementById('register-form-container').classList.add('hidden');
+                document.getElementById('login-form-container').classList.remove('hidden');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const un = document.getElementById('login-username').value.trim();
+            const pw = document.getElementById('login-password').value;
+
+            // Kiểm tra trong danh sách user
+            const user = appData.users.find(u => u.username === un && u.password === pw);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('eSchoolUser', JSON.stringify(currentUser));
+                checkAuth();
+            } else {
+                alert('Tên đăng nhập hoặc mật khẩu không chính xác!');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const fname = document.getElementById('reg-fullname').value.trim();
+            const un = document.getElementById('reg-username').value.trim();
+            const pw = document.getElementById('reg-password').value;
+
+            // Kiểm tra trùng lặp
+            if (appData.users.some(u => u.username === un)) {
+                alert('Tên đăng nhập này đã tồn tại! Vui lòng chọn tên khác.');
+                return;
+            }
+
+            // Tạo user mới
+            const newUser = {
+                username: un,
+                password: pw,
+                name: fname,
+                role: "Giáo viên",
+                avatar: fname.charAt(0).toUpperCase()
+            };
+
+            appData.users.push(newUser);
+            saveData();
+            
+            alert('Đăng ký thành công! Đang tự động đăng nhập...');
+            currentUser = newUser;
+            localStorage.setItem('eSchoolUser', JSON.stringify(currentUser));
+            
+            // Xóa form đăng ký
+            document.getElementById('reg-fullname').value = '';
+            document.getElementById('reg-username').value = '';
+            document.getElementById('reg-password').value = '';
+
+            checkAuth();
+        }
+
+        function handleLogout() {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?')) {
+                currentUser = null;
+                localStorage.removeItem('eSchoolUser'); // Xóa phiên đăng nhập
+                document.getElementById('login-password').value = ''; // Clear mk vì an toàn
+                checkAuth(); // Chuyển về màn hình đăng nhập
+            }
+        }
 
         // --- 3. UI XUYÊN SUỐT ---
         function toggleSidebar() {
