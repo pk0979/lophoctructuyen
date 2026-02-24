@@ -292,7 +292,7 @@
                         <select id="filter-lesson-class" onchange="renderLessons()" class="border border-gray-300 rounded px-3 py-2 flex-1 md:w-48 bg-white">
                             <!-- Render JS -->
                         </select>
-                        <button id="btn-add-lesson" onclick="openModal('modal-lesson')" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition hidden">
+                        <button id="btn-add-lesson" onclick="openLessonModal()" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition hidden">
                             <i class="fas fa-plus"></i><span class="hidden md:inline ml-2">Thêm bài</span>
                         </button>
                     </div>
@@ -311,7 +311,7 @@
                         <select id="filter-assignment-class" onchange="renderAssignments()" class="border border-gray-300 rounded px-3 py-2 flex-1 md:w-48 bg-white">
                             <!-- Render JS -->
                         </select>
-                        <button id="btn-add-assignment" onclick="openModal('modal-assignment')" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition hidden">
+                        <button id="btn-add-assignment" onclick="openAssignmentModal()" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition hidden">
                             <i class="fas fa-plus"></i><span class="hidden md:inline ml-2">Thêm bài tập</span>
                         </button>
                     </div>
@@ -1335,6 +1335,15 @@
             renderLessons();
         }
 
+        function openLessonModal() {
+            document.getElementById('modal-lesson-title').textContent = 'Thêm Bài Học Mới';
+            document.getElementById('lesson-id').value = '';
+            document.getElementById('lesson-current-file').value = '';
+            document.getElementById('lesson-file-name').classList.add('hidden');
+            populateClassDropdown('lesson-classId', false);
+            openModal('modal-lesson');
+        }
+
         function editLesson(id) {
             const db = getDB();
             const l = db.lessons.find(l => l.id === id);
@@ -1440,16 +1449,21 @@
             const db = getDB();
             lessonSelect.innerHTML = '<option value="">-- Chọn bài học --</option>';
             
+            if(!classId) return;
+
             const lessons = db.lessons.filter(l => l.classId === classId);
             lessons.forEach(l => {
                 lessonSelect.innerHTML += `<option value="${l.id}">${l.title}</option>`;
             });
         }
 
-        document.getElementById('btn-add-assignment').addEventListener('click', () => {
+        function openAssignmentModal() {
+            document.getElementById('modal-assignment-title').textContent = 'Thêm Bài Tập Mới';
+            document.getElementById('assignment-id').value = '';
             populateClassDropdown('assignment-classId', false);
             updateLessonDropdownForAssignment();
-        });
+            openModal('modal-assignment');
+        }
 
         function saveAssignment(e) {
             e.preventDefault();
