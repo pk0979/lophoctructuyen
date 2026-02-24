@@ -494,9 +494,17 @@
                 <label class="block text-sm font-medium mb-1">Tiêu đề bài tập</label>
                 <input type="text" id="assignment-title" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" required>
             </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Nội dung câu hỏi</label>
+                <textarea id="assignment-description" rows="3" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" placeholder="Nhập nội dung câu hỏi hoặc hướng dẫn..." required></textarea>
+                <div class="mt-2">
+                    <label class="block text-sm font-medium mb-1">Đính kèm tệp câu hỏi (Tùy chọn)</label>
+                    <input type="file" id="assignment-file" class="w-full border border-gray-300 rounded p-1.5 focus:ring-primary focus:border-primary text-sm">
+                </div>
+            </div>
             <div class="mb-6">
-                <label class="block text-sm font-medium mb-1">Yêu cầu chi tiết</label>
-                <textarea id="assignment-description" rows="4" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" placeholder="Ví dụ: Làm bài 1,2,3 SGK trang 45..." required></textarea>
+                <label class="block text-sm font-medium mb-1">Đáp án (Chỉ hiện cho học sinh sau khi đã nộp bài)</label>
+                <textarea id="assignment-solution" rows="3" class="w-full border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" placeholder="Nhập đáp án, lời giải chi tiết..."></textarea>
             </div>
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="closeModal('modal-assignment')" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100">Hủy</button>
@@ -515,8 +523,9 @@
             <input type="hidden" id="submit-assignmentId">
             <div class="mb-4 bg-gray-50 p-3 rounded text-sm border">
                 <p class="font-bold text-primary mb-1" id="submit-title"></p>
-                <p class="text-gray-700 mb-1" id="submit-desc"></p>
-                <p class="text-red-500"><i class="far fa-clock"></i> Hạn chót: <span id="submit-due"></span></p>
+                <p class="text-gray-700 mb-1 whitespace-pre-wrap" id="submit-desc"></p>
+                <div id="submit-attachment-display" class="mt-2 hidden text-blue-600 bg-blue-100 p-2 inline-block rounded border border-blue-200"></div>
+                <p class="text-red-500 mt-2"><i class="far fa-clock"></i> Hạn chót: <span id="submit-due"></span></p>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1">Nhập nội dung bài làm của bạn</label>
@@ -561,7 +570,7 @@
                 { id: "lesson2", classId: "class1", title: "Bài 2: Hàm số bậc hai", content: "Nội dung bài học về Parabol...", date: "2024-01-05" }
             ],
             assignments: [
-                { id: "assignment1", classId: "class1", lessonId: "lesson1", title: "Bài tập về nhà: Hàm số bậc nhất", description: "Giải các bài tập trong SGK trang 45. Bài 1, 2, 3.", dueDate: "2025-12-31" }
+                { id: "assignment1", classId: "class1", lessonId: "lesson1", title: "Bài tập về nhà: Hàm số bậc nhất", description: "Giải các bài tập trong SGK trang 45. Bài 1, 2, 3.", dueDate: "2025-12-31", attachment: "", solution: "Đáp án tham khảo:\n- Câu 1: y = 2x + 1\n- Câu 2: Đồ thị cắt trục hoành tại (-0.5, 0)" }
             ],
             submissions: [
                 { id: "submission1", assignmentId: "assignment1", studentId: "user2", content: "Em gửi bài làm ạ. Đáp án câu 1 là y = 2x -1...", grade: null, feedback: "" }
@@ -1409,6 +1418,8 @@
                 const dueClass = isOverdue ? 'text-red-500 font-bold' : 'text-gray-600';
 
                 let actionHTML = '';
+                let studentSolutionHTML = ''; // Biến chứa HTML đáp án cho học sinh
+
                 if (currentUser.role === 'teacher') {
                     const subCount = db.submissions.filter(s => s.assignmentId === a.id).length;
                     actionHTML = `
@@ -1419,7 +1430,17 @@
                     const submission = db.submissions.find(s => s.assignmentId === a.id && s.studentId === currentUser.id);
                     if (submission) {
                         const scoreText = submission.grade !== null ? `<span class="font-bold text-green-600 ml-2">Điểm: ${submission.grade}/10</span>` : '<span class="italic text-gray-500 ml-2">(Chưa chấm)</span>';
-                        actionHTML = `<span class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm"><i class="fas fa-check"></i> Đã nộp ${scoreText}</span>`;
+                        actionHTML = `<span class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm block mb-2"><i class="fas fa-check"></i> Đã nộp ${scoreText}</span>`;
+                        
+                        // Nếu đã nộp bài và có đáp án, hiển thị đáp án ra
+                        if(a.solution) {
+                            studentSolutionHTML = `
+                                <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-left shadow-sm">
+                                    <p class="font-bold text-green-800 text-sm mb-1"><i class="fas fa-lightbulb"></i> Đáp án từ giáo viên:</p>
+                                    <p class="text-sm text-green-700 whitespace-pre-wrap">${a.solution}</p>
+                                </div>
+                            `;
+                        }
                     } else {
                         actionHTML = `<button onclick="openSubmitModal('${a.id}')" class="bg-primary text-white px-3 py-1 rounded text-sm hover:bg-blue-600 shadow"><i class="fas fa-upload"></i> Nộp bài</button>`;
                     }
@@ -1427,14 +1448,16 @@
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="p-4">
+                        <td class="p-4 align-top w-2/5">
                             <p class="font-bold text-dark">${a.title}</p>
-                            <p class="text-xs text-gray-500 mt-1 line-clamp-1">${a.description}</p>
-                            ${currentUser.role === 'teacher' ? `<span class="inline-block mt-1 bg-gray-200 text-gray-700 text-[10px] px-2 py-0.5 rounded">${className}</span>` : ''}
+                            <p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">${a.description}</p>
+                            ${a.attachment ? `<div class="mt-2 text-sm text-blue-600 bg-blue-50 p-2 rounded inline-block border border-blue-100"><i class="fas fa-paperclip"></i> Tệp đính kèm: ${a.attachment}</div>` : ''}
+                            ${currentUser.role === 'teacher' ? `<div class="mt-2"><span class="inline-block bg-gray-200 text-gray-700 text-[10px] px-2 py-0.5 rounded">${className}</span></div>` : ''}
+                            ${studentSolutionHTML}
                         </td>
-                        <td class="p-4 text-sm text-gray-600">${lesson ? lesson.title : '-'}</td>
-                        <td class="p-4 text-sm ${dueClass}">${formatDate(a.dueDate)} ${isOverdue ? '(Quá hạn)' : ''}</td>
-                        <td class="p-4 text-center">
+                        <td class="p-4 text-sm text-gray-600 align-top">${lesson ? lesson.title : '-'}</td>
+                        <td class="p-4 text-sm ${dueClass} align-top">${formatDate(a.dueDate)} ${isOverdue ? '(Quá hạn)' : ''}</td>
+                        <td class="p-4 text-center align-top">
                             ${actionHTML}
                         </td>
                     </tr>
@@ -1460,6 +1483,8 @@
         function openAssignmentModal() {
             document.getElementById('modal-assignment-title').textContent = 'Thêm Bài Tập Mới';
             document.getElementById('assignment-id').value = '';
+            document.getElementById('assignment-file').value = '';
+            document.getElementById('assignment-solution').value = '';
             populateClassDropdown('assignment-classId', false);
             updateLessonDropdownForAssignment();
             openModal('modal-assignment');
@@ -1472,9 +1497,14 @@
             const dueDate = document.getElementById('assignment-dueDate').value;
             const title = document.getElementById('assignment-title').value;
             const description = document.getElementById('assignment-description').value;
+            const solution = document.getElementById('assignment-solution').value;
+            
+            // Xử lý tệp đính kèm (câu hỏi)
+            const fileInput = document.getElementById('assignment-file');
+            const attachment = fileInput.files.length > 0 ? fileInput.files[0].name : '';
 
             const db = getDB();
-            db.assignments.push({ id: generateId('assign'), classId, lessonId, title, description, dueDate });
+            db.assignments.push({ id: generateId('assign'), classId, lessonId, title, description, dueDate, attachment, solution });
             saveDB(db);
             showToast('Đã tạo bài tập mới');
             closeModal('modal-assignment');
@@ -1501,6 +1531,15 @@
                 document.getElementById('submit-title').textContent = a.title;
                 document.getElementById('submit-desc').textContent = a.description;
                 document.getElementById('submit-due').textContent = formatDate(a.dueDate);
+                
+                const attachEl = document.getElementById('submit-attachment-display');
+                if (a.attachment) {
+                    attachEl.innerHTML = `<i class="fas fa-paperclip"></i> Tệp câu hỏi: <span class="font-medium">${a.attachment}</span>`;
+                    attachEl.classList.remove('hidden');
+                } else {
+                    attachEl.classList.add('hidden');
+                }
+                
                 openModal('modal-submit');
             }
         }
